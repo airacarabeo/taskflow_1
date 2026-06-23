@@ -1,98 +1,160 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+type Task = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [task, setTask] = useState('');
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  function handleAddTask() {
+    const title = task.trim();
+
+    if (title === '') {
+      return;
+    }
+
+    setTasks([
+      ...tasks,
+      {
+        id: Date.now().toString(),
+        title,
+        completed: false,
+      },
+    ]);
+    setTask('');
+  }
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.screen}>
+      <View style={styles.header}>
+        <Text style={styles.title}>TaskFlow</Text>
+        <Text style={styles.subtitle}>Today&apos;s tasks</Text>
+      </View>
+
+      <View style={styles.inputRow}>
+        <TextInput
+          placeholder="Enter Task"
+          placeholderTextColor="#7C8796"
+          value={task}
+          onChangeText={setTask}
+          onSubmitEditing={handleAddTask}
+          returnKeyType="done"
+          style={styles.input}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add task"
+          onPress={handleAddTask}
+          style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}>
+          <MaterialIcons name="add" size={22} color="#fff" />
+        </Pressable>
+      </View>
+
+      <View style={styles.taskList}>
+        {tasks.length === 0 ? (
+          <Text style={styles.emptyText}>No tasks yet.</Text>
+        ) : (
+          tasks.map((item) => (
+            <View key={item.id} style={styles.taskRow}>
+              <MaterialIcons
+                name={item.completed ? 'check-box' : 'check-box-outline-blank'}
+                size={20}
+                color={item.completed ? '#2E5BBA' : '#5A6472'}
+              />
+              <Text style={styles.taskText}>{item.title}</Text>
+            </View>
+          ))
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  screen: {
+    flex: 1,
+    backgroundColor: '#F4F7FB',
+    paddingHorizontal: 20,
+    paddingTop: 72,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    color: '#152033',
+    fontSize: 34,
+    fontWeight: '700',
+  },
+  subtitle: {
+    color: '#5A6472',
+    fontSize: 16,
+    marginTop: 4,
+  },
+  inputRow: {
     alignItems: 'center',
-    gap: 8,
+    flexDirection: 'row',
+    gap: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  input: {
+    backgroundColor: '#fff',
+    borderColor: '#D8E0EA',
+    borderRadius: 8,
+    borderWidth: 1,
+    color: '#152033',
+    flex: 1,
+    fontSize: 16,
+    minHeight: 48,
+    paddingHorizontal: 14,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  addButton: {
+    alignItems: 'center',
+    backgroundColor: '#2E5BBA',
+    borderRadius: 8,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
+  },
+  addButtonPressed: {
+    backgroundColor: '#244B9D',
+  },
+  taskList: {
+    marginTop: 24,
+    gap: 10,
+  },
+  taskRow: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderColor: '#E1E7F0',
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 10,
+    minHeight: 48,
+    paddingHorizontal: 14,
+  },
+  taskText: {
+    color: '#152033',
+    flex: 1,
+    fontSize: 16,
+  },
+  emptyText: {
+    color: '#7C8796',
+    fontSize: 15,
   },
 });
